@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<ruleset name="PMD Rules for CI/CD"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0
+                             https://pmd.sourceforge.net/ruleset_2_0_0.xsd">
+
+    <description>
+        Custom PMD ruleset for CI/CD workflow 17-backend-PMD-checks.yml.
+        Focuses on code quality issues related to unused code and potential problems.
+        Note: PMD 7.3.0 does not have a direct "commented-out code" rule, so we use
+        rules that detect unused imports, variables, and other code quality issues.
+    </description>
+
+    <!-- Detect unused imports (can indicate commented-out usage) -->
+    <rule ref="category/java/codestyle.xml/UnnecessaryImport" />
+    
+    <!-- Detect unused variables (can indicate commented-out usage) -->
+    <rule ref="category/java/bestpractices.xml/UnusedLocalVariable" />
+    
+    <!-- Detect unused private methods (can indicate commented-out usage) -->
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod" />
+    
+    <!-- Detect unused formal parameters (can indicate commented-out usage) -->
+    <rule ref="category/java/bestpractices.xml/UnusedFormalParameter" />
+
+</ruleset>

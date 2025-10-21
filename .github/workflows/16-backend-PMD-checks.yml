@@ -1,0 +1,11 @@
+name: 16-backend-PMD-checks (placeholder)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Placeholder step
+        run: echo "Restored workflow file to satisfy code scanning configuration mapping."

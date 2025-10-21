@@ -1,0 +1,58 @@
+package edu.ucsb.cs156.example.web;
+
+import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+
+import com.microsoft.playwright.Browser;
+import com.microsoft.playwright.BrowserContext;
+import com.microsoft.playwright.BrowserType;
+import com.microsoft.playwright.Page;
+import com.microsoft.playwright.Playwright;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+@ExtendWith(SpringExtension.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@ActiveProfiles("integration")
+public class HomePageWebIT {
+  @Value("${app.playwright.headless:true}")
+  private boolean runHeadless;
+
+  @LocalServerPort private int port;
+
+  private Browser browser;
+  private Page page;
+
+  @BeforeEach
+  public void setup() {
+    browser =
+        Playwright.create()
+            .chromium()
+            .launch(new BrowserType.LaunchOptions().setHeadless(runHeadless));
+
+    BrowserContext context = browser.newContext();
+    page = context.newPage();
+  }
+
+  @AfterEach
+  public void teardown() {
+    browser.close();
+  }
+
+  @Test
+  public void home_page_shows_greeting() throws Exception {
+    String url = String.format("http://localhost:%d/", port);
+    page.navigate(url);
+
+    assertThat(
+            page.getByText(
+                "This is the homepage for team01 which is simply a backend with no frontend."))
+        .isVisible();
+  }
+}

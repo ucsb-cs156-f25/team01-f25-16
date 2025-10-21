@@ -1,0 +1,474 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <!-- (0) <modelVersion/> -->
+  <modelVersion>4.0.0</modelVersion>
+
+  <!-- (1) <parent/> -->
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.4.3</version>
+  </parent>
+
+  <!-- (2) <groupId/> -->
+  <groupId>edu.ucsb.cs156</groupId>
+
+  <!-- (3) <artifactId/> -->
+
+  <artifactId>team01</artifactId>
+
+  <!-- (4) <version/> -->
+  <version>1.0.0</version>
+
+  <!-- (5) <packaging/> -->
+  <!-- (6) <name/> -->
+  <!-- (7) <description/> -->
+
+  <description>Demonstration of Spring Boot Backend</description>
+
+  <!-- (8) <url/> -->
+  <!-- (9) <inceptionYear/> -->
+  <!-- (10) <organization/> -->
+  <!-- (11) <licenses/> -->
+  <!-- (12) <developers/> -->
+  <!-- (13) <contributors/> -->
+  <!-- (14) <mailingLists/> -->
+  <!-- (15) <prerequisites/> -->
+  <!-- (16) <modules/> -->
+  <!-- (17) <scm/> -->
+  <!-- (18) <issueManagement/> -->
+  <!-- (19) <ciManagement/> -->
+  <!-- (20) <distributionManagement/> -->
+  <!-- (21) <properties/> -->
+
+  <properties>
+    <java.version>21</java.version>
+    <mainClass>edu.ucsb.cs156.example.ExampleApplication</mainClass>
+    <app.package>edu.ucsb.cs156.example</app.package>
+    <app.packagePath>edu/ucsb/cs156/example</app.packagePath>
+    <targetClasses>${targetClasses:edu.ucsb.cs156.*}</targetClasses>
+  </properties>
+
+  <!-- (22) <dependencyManagement/> -->
+  <!-- (23) <dependencies/> -->
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-gateway-mvc</artifactId>
+      <version>4.2.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>me.paulschwarz</groupId>
+      <artifactId>spring-dotenv</artifactId>
+      <version>2.4.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-devtools</artifactId>
+      <scope>runtime</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-configuration-processor</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.microsoft.playwright</groupId>
+      <artifactId>playwright</artifactId>
+      <version>1.47.0</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.wiremock</groupId>
+      <artifactId>wiremock-jetty12</artifactId>
+      <version>3.9.1</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/jakarta.validation/jakarta.validation-api -->
+    <dependency>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
+      <version>3.1.0</version>
+    </dependency>
+
+    <!-- Spring Doc for Spring Boot 3 https://springdoc.org/ -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>2.5.0</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.liquibase/liquibase-maven-plugin -->
+    <dependency>
+      <groupId>org.liquibase</groupId>
+      <artifactId>liquibase-maven-plugin</artifactId>
+      <version>4.29.2</version>
+    </dependency>
+
+  </dependencies>
+
+  <!-- (24) <repositories/> -->
+  <!-- (25) <pluginRepositories/> -->
+  <!-- (26) <build/> -->
+
+  <build>
+    <plugins>
+      <!-- This fixes a problem as explained in this SO article:
+      https://stackoverflow.com/a/61936537/13960329
+      -->
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.0.0-M5</version>
+        <configuration>
+          <!-- Activate the use of TCP to transmit events to the plugin -->
+          <forkNode
+            implementation="org.apache.maven.plugin.surefire.extensions.SurefireForkNodeFactory" />
+        </configuration>
+      </plugin>
+
+      <!-- Gives us: mvn spring-boot:run -->
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <mainClass>${mainClass}</mainClass>
+        </configuration>
+      </plugin>
+
+      <!-- For mvn:package, the jar file is now executable -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.2.0</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <!-- full package name of class with the main you want to run -->
+              <mainClass>${mainClass}</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+
+
+      <!-- Test case coverage report -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.12</version>
+        <configuration>
+          <excludes>
+            <exclude>**/${app.packagePath}/aop/LoggingAspect.*</exclude>
+            <exclude>**/${app.packagePath}/config/*</exclude>
+            <exclude>**/${app.packagePath}/services/CurrentUserServiceImpl.*</exclude>
+            <exclude>**/${app.packagePath}/services/GrantedAuthoritiesService.*</exclude>
+            <exclude>**/${app.packagePath}/ExampleApplication.*</exclude>
+            <exclude>**/edu/ucsb/cs156/example/services/wiremock/*</exclude>
+          </excludes>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>check</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <rule implementation="org.jacoco.maven.RuleConfiguration">
+                  <element>BUNDLE</element>
+                  <limits>
+                    <limit implementation="org.jacoco.report.check.Limit">
+                      <counter>INSTRUCTION</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>1.00</minimum>
+                    </limit>
+                    <limit implementation="org.jacoco.report.check.Limit">
+                      <counter>BRANCH</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>1.00</minimum>
+                    </limit>
+                    <limit implementation="org.jacoco.report.check.Limit">
+                      <counter>LINE</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>1.00</minimum>
+                    </limit>
+                    <limit implementation="org.jacoco.report.check.Limit">
+                      <counter>CLASS</counter>
+                      <value>MISSEDCOUNT</value>
+                      <maximum>0</maximum>
+                    </limit>
+                  </limits>
+                </rule>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+
+      <plugin>
+        <groupId>org.pitest</groupId>
+        <artifactId>pitest-maven</artifactId>
+        <version>1.17.0</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.pitest</groupId>
+            <artifactId>pitest-junit5-plugin</artifactId>
+            <version>1.2.1</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <historyInputFile>
+            target/pit-history/history.bin
+          </historyInputFile>
+          <historyOutputFile>
+            target/pit-history/history.bin
+          </historyOutputFile>
+          <verbose>true</verbose>
+          <targetClasses>
+            <param>${targetClasses}</param>
+          </targetClasses>
+          <targetTests>
+            <param>edu.ucsb.cs156.*</param>
+          </targetTests>
+          <excludedClasses>
+            <param>${app.package}.aop.LoggingAspect</param>
+            <param>${app.package}.services.CurrentUserServiceImpl</param>
+            <param>${app.package}.ExampleApplication</param>
+            <param>${app.package}.config.SecurityConfig</param>
+            <param>${app.package}.config.SpaCsrfTokenRequestHandler</param>
+            <param>${app.package}.config.CsrfCookieFilter</param>
+            <param>edu.ucsb.cs156.example.services.wiremock.WiremockService</param>
+            <param>edu.ucsb.cs156.example.services.wiremock.WiremockServiceDummy</param>
+            <param>edu.ucsb.cs156.example.services.wiremock.WiremockServiceImpl</param>
+            <param>${app.package}.services.GrantedAuthoritiesService</param>
+          </excludedClasses>
+          <excludedTestClasses>
+            <param>edu.ucsb.cs156.example.web.*</param>
+            <param>edu.ucsb.cs156.example.integration.*</param>
+          </excludedTestClasses>
+          <outputFormats>
+            <outputFormat>HTML</outputFormat>
+            <outputFormat>CSV</outputFormat>
+            <outputFormat>XML</outputFormat>
+          </outputFormats>
+          <avoidCallsTo>
+            <avoidCallsTo>java.util.logging</avoidCallsTo>
+            <avoidCallsTo>org.apache.log4j</avoidCallsTo>
+            <avoidCallsTo>org.slf4j</avoidCallsTo>
+            <avoidCallsTo>org.apache.commons.logging</avoidCallsTo>
+            <avoidCallsTo>java.lang.Exception</avoidCallsTo>
+            <avoidCallsTo>org.springframework.security.core.context.SecurityContextHolder</avoidCallsTo>
+          </avoidCallsTo>
+          <timestampedReports>false</timestampedReports>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>io.github.git-commit-id</groupId>
+        <artifactId>git-commit-id-maven-plugin</artifactId>
+        <version>8.0.2</version>
+        <executions>
+          <execution>
+            <id>get-the-git-infos</id>
+            <goals>
+              <goal>revision</goal>
+            </goals>
+            <phase>initialize</phase>
+          </execution>
+        </executions>
+        <configuration>
+          <generateGitPropertiesFile>true</generateGitPropertiesFile>
+          <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
+          <commitIdGenerationMode>full</commitIdGenerationMode>
+        </configuration>
+      </plugin>
+
+      <!-- PMD plugin for static analysis, specifically checking for commented-out code -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <version>3.25.0</version>
+        <configuration>
+          <inputEncoding>UTF-8</inputEncoding>
+          <targetJdk>21</targetJdk>
+          <rulesets>
+            <!-- Use custom ruleset focused on unused code detection -->
+            <ruleset>pmd-rules.xml</ruleset>
+          </rulesets>
+          <failOnViolation>true</failOnViolation>
+          <linkXRef>false</linkXRef>
+          <includeTests>false</includeTests>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>com.cosium.code</groupId>
+        <artifactId>git-code-format-maven-plugin</artifactId>
+        <version>5.3</version>
+        <executions>
+          <!-- On commit, format the modified files -->
+          <execution>
+            <id>install-formatter-hook</id>
+            <goals>
+              <goal>install-hooks</goal>
+            </goals>
+          </execution>
+          <!-- On Maven verify phase, fail if any file
+          (including unmodified) is badly formatted -->
+          <execution>
+            <id>validate-code-format</id>
+            <goals>
+              <goal>validate-code-format</goal>
+            </goals>
+          </execution>
+        </executions>
+        <dependencies>
+          <!-- Enable https://github.com/google/google-java-format -->
+          <dependency>
+            <groupId>com.cosium.code</groupId>
+            <artifactId>google-java-format</artifactId>
+            <version>5.3</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+    </plugins>
+  </build>
+
+  <!-- (27) <reporting/> -->
+  <!-- (28) <profiles/> -->
+
+  <profiles>
+    <!-- active by default -->
+    <profile>
+      <id>localhost</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <springProfiles>development</springProfiles>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>com.h2database</groupId>
+          <artifactId>h2</artifactId>
+          <scope>runtime</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+    <!-- to run with this profile use "WIREMOCK=true mvn spring-boot:run" -->
+    <profile>
+      <id>wiremock</id>
+      <activation>
+        <property>
+          <name>env.WIREMOCK</name>
+        </property>
+      </activation>
+      <properties>
+        <springProfiles>wiremock,development</springProfiles>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>com.h2database</groupId>
+          <artifactId>h2</artifactId>
+          <scope>runtime</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+    <!-- to run with this profile use "INTEGRATION=true mvn spring-boot:run" -->
+    <profile>
+      <id>integration</id>
+      <activation>
+        <property>
+          <name>env.INTEGRATION</name>
+        </property>
+      </activation>
+      <properties>
+        <springProfiles>integration</springProfiles>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>com.h2database</groupId>
+          <artifactId>h2</artifactId>
+          <scope>runtime</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+    <!-- to run with this profile use "PRODUCTION=true mvn spring-boot:run" -->
+    <profile>
+      <id>production</id>
+      <activation>
+        <property>
+          <name>env.PRODUCTION</name>
+        </property>
+      </activation>
+      <properties>
+        <springProfiles>production</springProfiles>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>com.h2database</groupId>
+          <artifactId>h2</artifactId>
+          <scope>runtime</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
+
+
+</project>
