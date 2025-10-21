@@ -345,6 +345,21 @@ jobs:
             * Create a new branch, starting from the branch for the issue you just finished.
             * Start on the new issue.
 
+            NOTE: it is important to *create a new branch* for the new issue, starting from the branch
+            for the issue you just finished.  This ensures that your new branch has the code changes
+            for the database table that you just created.  It also ensures that the PR for the older
+            issue is not polluted with code changes for the new issue.
+
+            DO NOT just continue working on the same branch you used for the previous issue.  That will
+            delay the ability of the team to code review and merge your PR for the previous issue.
+
+            Also note that when you work on the legacy code project later on:
+            * You MUST* create a new branch for each issue you work on
+            * But you should *NOT* necessarily start from the previous branch, unless 
+              the issue you are working on depends on code changes from the previous issue.
+            * Instead, you'll start every new branch from a clean, updated copy of the `main` branch.
+
+
       - name: Create Controller, add GET (index) and POST (create)
         uses: dacbd/create-issue-action@main
         env:
@@ -493,6 +508,24 @@ jobs:
               * Drag into "In Progress"
               * Create a new branch, starting from the branch for the issue you just finished.
               * Start on the new issue.
+
+              NOTE: it is important to *create a new branch* for the new issue, starting from the branch
+              for the issue you just finished.  This ensures that your new branch has the code changes
+              for the database table that you just created.  It also ensures that the PR for the older
+              issue is not polluted with code changes for the new issue.
+
+              DO NOT just continue working on the same branch you used for the previous issue.  That will
+              delay the ability of the team to code review and merge your PR for the previous issue.
+
+              We will not put this instruction on all of the subsequent issues, but it applies to all of them.
+
+              And remember that when you work on the legacy code project later on:
+              * You MUST* create a new branch for each issue you work on
+              * But you should *NOT* necessarily start from the previous branch, unless 
+                the issue you are working on depends on code changes from the previous issue.
+              * Instead, you'll start every new branch from a clean, updated copy of the `main` branch.
+
+
 
       - name:  Add `GET` (show) endpoint for a single record in table
         uses: dacbd/create-issue-action@main
