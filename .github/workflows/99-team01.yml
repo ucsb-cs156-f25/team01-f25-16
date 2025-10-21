@@ -314,8 +314,10 @@ jobs:
                   using the H2 console (see the file [`docs/h2-database.md`](${{env.STARTER_REPO_RELATIVE_LINK}}/blob/main/docs/h2-database.md) for 
                   instructions.)
             - [ ] When you deploy the app to Dokku, you can see the table
-                  using the `dokku postgres:connect ${{env.ASN_NAME}}-db` command
-                  (use `\dt` to list the tables) (See <https://ucsb-cs156.github.io/topics/dokku/postgres_database.html#postgres-command-line> for more info.)
+                  using the `dokku postgres:connect <db>` command
+                  (use `\dt` to list the tables) (See <https://ucsb-cs156.github.io/topics/dokku/postgres_database.html#postgres-command-line> for more info. 
+                  You should run this command on whatever DB is attached to where the application is deployed (ie, if your dokku app is named `team01-yourGithubId-dev` then your db is likely
+                  `team01-yourGithubId-dev-db`)
           
             # What to do next
 
