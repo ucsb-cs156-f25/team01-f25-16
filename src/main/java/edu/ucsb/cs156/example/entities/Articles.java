@@ -11,18 +11,18 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@@AllArgsConstructor
+@AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Entity(name = "articles")
 public class Articles {
-    @Id;
-    @GeneratedValue(strategy = GenerationType.IDENTITY);
-    private long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private long id;
 
-    private String title;
-    private String url;
-    private String explanation;
-    private string submitterEmail;
-    private LocalDateTime dateAdded;
+  private String title;
+  private String url;
+  private String explanation;
+  private String submitterEmail;
+  private LocalDateTime dateAdded;
 }
