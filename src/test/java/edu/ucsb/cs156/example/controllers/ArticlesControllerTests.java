@@ -8,6 +8,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import edu.ucsb.cs156.example.ControllerTestCase;
@@ -239,6 +240,92 @@ public class ArticlesControllerTests extends ControllerTestCase {
         mockMvc.perform(get("/api/articles?id=21")).andExpect(status().isNotFound()).andReturn();
 
     verify(articlesRepository, times(1)).findById(21L);
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("Articles with id 21 not found", json.get("message"));
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_can_put_existing_article() throws Exception {
+
+    LocalDateTime originalDate = LocalDateTime.parse("2022-01-03T00:00:00");
+    LocalDateTime updatedDate = LocalDateTime.parse("2022-02-04T00:00:00");
+
+    Articles existing =
+        Articles.builder()
+            .id(21L)
+            .title("Article 1")
+            .url("https://example.com/1")
+            .explanation("Explains 1")
+            .submitterEmail("one@example.com")
+            .dateAdded(originalDate)
+            .build();
+
+    Articles incoming =
+        Articles.builder()
+            .title("New Title")
+            .url("https://example.com/new")
+            .explanation("New Explanation")
+            .submitterEmail("new@example.com")
+            .dateAdded(updatedDate)
+            .build();
+
+    when(articlesRepository.findById(21L)).thenReturn(Optional.of(existing));
+
+    String requestBody = mapper.writeValueAsString(incoming);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/articles?id=21")
+                    .contentType("application/json")
+                    .content(requestBody)
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(articlesRepository, times(1)).findById(21L);
+    verify(articlesRepository, times(1)).save(existing);
+
+    String responseString = response.getResponse().getContentAsString();
+    Articles updated = mapper.readValue(responseString, Articles.class);
+
+    assertEquals("New Title", updated.getTitle());
+    assertEquals("https://example.com/new", updated.getUrl());
+    assertEquals("New Explanation", updated.getExplanation());
+    assertEquals("new@example.com", updated.getSubmitterEmail());
+    assertEquals(updatedDate, updated.getDateAdded());
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_gets_404_when_putting_nonexistent_article() throws Exception {
+
+    Articles incoming =
+        Articles.builder()
+            .title("New Title")
+            .url("https://example.com/new")
+            .explanation("New Explanation")
+            .submitterEmail("new@example.com")
+            .dateAdded(LocalDateTime.parse("2022-02-04T00:00:00"))
+            .build();
+
+    when(articlesRepository.findById(21L)).thenReturn(Optional.empty());
+
+    String requestBody = mapper.writeValueAsString(incoming);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/articles?id=21")
+                    .contentType("application/json")
+                    .content(requestBody)
+                    .with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    verify(articlesRepository, times(1)).findById(21L);
+
     Map<String, Object> json = responseToJson(response);
     assertEquals("Articles with id 21 not found", json.get("message"));
   }
