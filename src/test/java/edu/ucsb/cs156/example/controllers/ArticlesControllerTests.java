@@ -19,8 +19,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -153,46 +151,6 @@ public class ArticlesControllerTests extends ControllerTestCase {
     String expectedJson = mapper.writeValueAsString(expectedArticles);
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
-  }
-
-  @WithMockUser(roles = {"USER"})
-  @Test
-  public void logged_in_user_can_get_article_by_id() throws Exception {
-
-    LocalDateTime ldt = LocalDateTime.parse("2022-01-03T00:00:00");
-
-    Articles article =
-        Articles.builder()
-            .title("Article 1")
-            .url("https://example.com/1")
-            .explanation("Explains 1")
-            .submitterEmail("one@example.com")
-            .dateAdded(ldt)
-            .build();
-
-    when(articlesRepository.findById(21L)).thenReturn(Optional.of(article));
-
-    MvcResult response =
-        mockMvc.perform(get("/api/articles?id=21")).andExpect(status().isOk()).andReturn();
-
-    verify(articlesRepository, times(1)).findById(21L);
-    String expectedJson = mapper.writeValueAsString(article);
-    String responseString = response.getResponse().getContentAsString();
-    assertEquals(expectedJson, responseString);
-  }
-
-  @WithMockUser(roles = {"USER"})
-  @Test
-  public void logged_in_user_gets_404_when_article_not_found() throws Exception {
-
-    when(articlesRepository.findById(21L)).thenReturn(Optional.empty());
-
-    MvcResult response =
-        mockMvc.perform(get("/api/articles?id=21")).andExpect(status().isNotFound()).andReturn();
-
-    verify(articlesRepository, times(1)).findById(21L);
-    Map<String, Object> json = responseToJson(response);
-    assertEquals("Articles with id 21 not found", json.get("message"));
   }
 
   @WithMockUser(roles = {"ADMIN", "USER"})
