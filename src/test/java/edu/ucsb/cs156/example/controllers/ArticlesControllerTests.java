@@ -5,6 +5,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -51,10 +52,69 @@ public class ArticlesControllerTests extends ControllerTestCase {
     mockMvc.perform(post("/api/articles/post")).andExpect(status().is(403));
   }
 
+  @Test
+  public void logged_out_users_cannot_delete() throws Exception {
+    mockMvc.perform(delete("/api/articles?id=15")).andExpect(status().is(403));
+  }
+
   @WithMockUser(roles = {"USER"})
   @Test
   public void logged_in_regular_users_cannot_post() throws Exception {
     mockMvc.perform(post("/api/articles/post")).andExpect(status().is(403));
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void logged_in_regular_users_cannot_delete() throws Exception {
+    mockMvc.perform(delete("/api/articles?id=15")).andExpect(status().is(403));
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_can_delete_article() throws Exception {
+
+    LocalDateTime ldt = LocalDateTime.parse("2022-01-03T00:00:00");
+
+    Articles article =
+        Articles.builder()
+            .title("Article 1")
+            .url("https://example.com/1")
+            .explanation("Explains 1")
+            .submitterEmail("one@example.com")
+            .dateAdded(ldt)
+            .build();
+
+    when(articlesRepository.findById(15L)).thenReturn(Optional.of(article));
+
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/articles?id=15").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(articlesRepository, times(1)).findById(15L);
+    verify(articlesRepository, times(1)).delete(article);
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("Articles with id 15 deleted", json.get("message"));
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_cannot_delete_nonexistent_article() throws Exception {
+
+    when(articlesRepository.findById(15L)).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/articles?id=15").with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    verify(articlesRepository, times(1)).findById(15L);
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("Articles with id 15 not found", json.get("message"));
   }
 
   @WithMockUser(roles = {"USER"})
