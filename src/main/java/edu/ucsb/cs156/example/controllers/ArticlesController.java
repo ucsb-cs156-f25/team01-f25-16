@@ -110,8 +110,8 @@ public class ArticlesController extends ApiController {
     article.setSubmitterEmail(incoming.getSubmitterEmail());
     article.setDateAdded(incoming.getDateAdded());
 
-    Articles updatedArticle = articlesRepository.save(article);
+    articlesRepository.save(article);
 
-    return updatedArticle;
+    return article;
   }
 }
