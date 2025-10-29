@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -255,6 +256,145 @@ public class RecommendationRequestsControllerTests extends ControllerTestCase {
     verify(repository, times(1)).findById(999L);
     String body = response.getResponse().getContentAsString();
     // message format varies by template; assert on key parts to be robust
+    org.assertj.core.api.Assertions.assertThat(body)
+        .containsIgnoringCase("RecommendationRequests")
+        .contains("999");
+  }
+
+  @Test
+  public void logged_out_users_cannot_put() throws Exception {
+    mockMvc
+        .perform(put("/api/recommendationrequests").param("id", "123"))
+        .andExpect(status().is(403));
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void regular_users_cannot_put() throws Exception {
+    mockMvc
+        .perform(put("/api/recommendationrequests").param("id", "123"))
+        .andExpect(status().is(403));
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_cannot_put_without_csrf() throws Exception {
+    var body =
+        mapper.writeValueAsString(
+            RecommendationRequests.builder()
+                .requesterEmail("new@ucsb.edu")
+                .professorEmail("prof@ucsb.edu")
+                .explanation("updated")
+                .dateRequested(LocalDateTime.parse("2025-12-01T08:00:00"))
+                .dateNeeded(LocalDateTime.parse("2025-12-15T17:00:00"))
+                .done(true)
+                .build());
+
+    mockMvc
+        .perform(
+            put("/api/recommendationrequests")
+                .param("id", "123")
+                .contentType(APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isForbidden()); // missing CSRF
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_can_put_updates_existing_record() throws Exception {
+    // existing in DB
+    RecommendationRequests existing =
+        RecommendationRequests.builder()
+            .requesterEmail("old@ucsb.edu")
+            .professorEmail("oldprof@ucsb.edu")
+            .explanation("old explanation")
+            .dateRequested(LocalDateTime.parse("2025-10-01T09:00:00"))
+            .dateNeeded(LocalDateTime.parse("2025-10-20T17:00:00"))
+            .done(false)
+            .build();
+    existing.setId(123L);
+
+    when(repository.findById(123L)).thenReturn(java.util.Optional.of(existing));
+
+    // incoming update (id in body ignored if present)
+    RecommendationRequests incoming =
+        RecommendationRequests.builder()
+            .requesterEmail("new@ucsb.edu")
+            .professorEmail("newprof@ucsb.edu")
+            .explanation("new explanation")
+            .dateRequested(LocalDateTime.parse("2025-11-01T08:15:00"))
+            .dateNeeded(LocalDateTime.parse("2025-11-30T17:00:00"))
+            .done(true)
+            .build();
+
+    // expected saved (same id as existing, updated fields)
+    RecommendationRequests expectedSaved =
+        RecommendationRequests.builder()
+            .requesterEmail("new@ucsb.edu")
+            .professorEmail("newprof@ucsb.edu")
+            .explanation("new explanation")
+            .dateRequested(LocalDateTime.parse("2025-11-01T08:15:00"))
+            .dateNeeded(LocalDateTime.parse("2025-11-30T17:00:00"))
+            .done(true)
+            .build();
+    expectedSaved.setId(123L);
+
+    when(repository.save(eq(expectedSaved))).thenReturn(expectedSaved);
+
+    String jsonBody = mapper.writeValueAsString(incoming);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/recommendationrequests")
+                    .param("id", "123")
+                    .contentType(APPLICATION_JSON)
+                    .content(jsonBody)
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(repository, times(1)).findById(123L);
+    verify(repository, times(1)).save(eq(expectedSaved));
+
+    String expectedJson = mapper.writeValueAsString(expectedSaved);
+    String responseString = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, responseString);
+  }
+
+  // ---------- BEHAVIOR: PUT not found -> 404 ----------
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_put_nonexistent_id_returns_404() throws Exception {
+    when(repository.findById(999L)).thenReturn(java.util.Optional.empty());
+
+    RecommendationRequests incoming =
+        RecommendationRequests.builder()
+            .requesterEmail("any@ucsb.edu")
+            .professorEmail("prof@ucsb.edu")
+            .explanation("whatever")
+            .dateRequested(LocalDateTime.parse("2025-12-01T08:00:00"))
+            .dateNeeded(LocalDateTime.parse("2025-12-15T17:00:00"))
+            .done(false)
+            .build();
+
+    String jsonBody = mapper.writeValueAsString(incoming);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/recommendationrequests")
+                    .param("id", "999")
+                    .contentType(APPLICATION_JSON)
+                    .content(jsonBody)
+                    .with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    verify(repository, times(1)).findById(999L);
+    String body = response.getResponse().getContentAsString();
+    // robust substring checks (exact template message can vary)
     org.assertj.core.api.Assertions.assertThat(body)
         .containsIgnoringCase("RecommendationRequests")
         .contains("999");

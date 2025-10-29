@@ -14,6 +14,8 @@ import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -41,6 +43,32 @@ public class RecommendationRequestsController extends ApiController {
     return repository
         .findById(id)
         .orElseThrow(() -> new EntityNotFoundException(RecommendationRequests.class, id));
+  }
+
+  @Operation(summary = "Update a RecommendationRequest by id")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @PutMapping("")
+  public RecommendationRequests updateById(
+      @Parameter(name = "id") @RequestParam Long id,
+      @io.swagger.v3.oas.annotations.parameters.RequestBody(
+              description = "JSON body with new field values (id is ignored)")
+          @RequestBody
+          RecommendationRequests incoming) {
+
+    RecommendationRequests existing =
+        repository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(RecommendationRequests.class, id));
+
+    // copy over mutable fields (do NOT change id)
+    existing.setRequesterEmail(incoming.getRequesterEmail());
+    existing.setProfessorEmail(incoming.getProfessorEmail());
+    existing.setExplanation(incoming.getExplanation());
+    existing.setDateRequested(incoming.getDateRequested());
+    existing.setDateNeeded(incoming.getDateNeeded());
+    existing.setDone(incoming.isDone());
+
+    return repository.save(existing);
   }
 
   @Operation(summary = "Create a new recommendation request")
