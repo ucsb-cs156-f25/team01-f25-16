@@ -88,13 +88,13 @@ import org.springframework.web.bind.annotation.RestController;
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @DeleteMapping(&quot;&quot;)
   public Object deleteMenuItems(@Parameter(name = &quot;id&quot;) @RequestParam Long id) {
-<span class="nc" id="L91">    UCSBDiningCommonsMenuItem item =</span>
+<span class="fc" id="L91">    UCSBDiningCommonsMenuItem item =</span>
         repository
-<span class="nc" id="L93">            .findById(id)</span>
-<span class="nc" id="L94">            .orElseThrow(() -&gt; new EntityNotFoundException(UCSBDiningCommonsMenuItem.class, id));</span>
+<span class="fc" id="L93">            .findById(id)</span>
+<span class="fc" id="L94">            .orElseThrow(() -&gt; new EntityNotFoundException(UCSBDiningCommonsMenuItem.class, id));</span>
 
-<span class="nc" id="L96">    repository.delete(item);</span>
-<span class="nc" id="L97">    return genericMessage(&quot;UCSBDiningCommonsMenuItem with id %s deleted&quot;.formatted(id));</span>
+<span class="fc" id="L96">    repository.delete(item);</span>
+<span class="fc" id="L97">    return genericMessage(&quot;UCSBDiningCommonsMenuItem with id %s deleted&quot;.formatted(id));</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
