@@ -23,4 +23,4 @@ repo_name: "TBD"
 repo: ucsb-cs156-f25/team01-f25-16
 owner: ucsb-cs156-f25
 repo_name: team01-f25-16
-pull_requests: [{"author":{"id":"U_kgDOCBQ7GQ","is_bot":false,"login":"Saqif-Ayaan","name":""},"headRefName":"revert-73-create-get-recommendation-requests","number":74,"title":"Revert \"Create GET endpoint for recommendation requests\"","url":"https://github.com/ucsb-cs156-f25/team01-f25-16/pull/74"}]
+pull_requests: []
