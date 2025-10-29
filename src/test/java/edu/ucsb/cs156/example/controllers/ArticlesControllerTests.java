@@ -1,13 +1,13 @@
 package edu.ucsb.cs156.example.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import edu.ucsb.cs156.example.ControllerTestCase;
@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -164,12 +165,12 @@ public class ArticlesControllerTests extends ControllerTestCase {
             .dateAdded(ldt)
             .build();
 
-    when(articlesRepository.findById(eq(21L))).thenReturn(Optional.of(article));
+    when(articlesRepository.findById(21L)).thenReturn(Optional.of(article));
 
     MvcResult response =
         mockMvc.perform(get("/api/articles?id=21")).andExpect(status().isOk()).andReturn();
 
-    verify(articlesRepository, times(1)).findById(eq(21L));
+    verify(articlesRepository, times(1)).findById(21L);
     String expectedJson = mapper.writeValueAsString(article);
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
@@ -179,14 +180,101 @@ public class ArticlesControllerTests extends ControllerTestCase {
   @Test
   public void logged_in_user_gets_404_when_article_not_found() throws Exception {
 
-    when(articlesRepository.findById(eq(21L))).thenReturn(Optional.empty());
+    when(articlesRepository.findById(21L)).thenReturn(Optional.empty());
 
     MvcResult response =
         mockMvc.perform(get("/api/articles?id=21")).andExpect(status().isNotFound()).andReturn();
 
-    verify(articlesRepository, times(1)).findById(eq(21L));
+    verify(articlesRepository, times(1)).findById(21L);
     Map<String, Object> json = responseToJson(response);
-    assertEquals("EntityNotFoundException", json.get("type"));
+    assertEquals("Articles with id 21 not found", json.get("message"));
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_can_put_existing_article() throws Exception {
+
+    LocalDateTime originalDate = LocalDateTime.parse("2022-01-03T00:00:00");
+    LocalDateTime updatedDate = LocalDateTime.parse("2022-02-04T00:00:00");
+
+    Articles existing =
+        Articles.builder()
+            .id(21L)
+            .title("Article 1")
+            .url("https://example.com/1")
+            .explanation("Explains 1")
+            .submitterEmail("one@example.com")
+            .dateAdded(originalDate)
+            .build();
+
+    Articles incoming =
+        Articles.builder()
+            .title("New Title")
+            .url("https://example.com/new")
+            .explanation("New Explanation")
+            .submitterEmail("new@example.com")
+            .dateAdded(updatedDate)
+            .build();
+
+    when(articlesRepository.findById(21L)).thenReturn(Optional.of(existing));
+
+    String requestBody = mapper.writeValueAsString(incoming);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/articles?id=21")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .characterEncoding("utf-8")
+                    .content(requestBody)
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(articlesRepository, times(1)).findById(21L);
+    verify(articlesRepository, times(1)).save(existing);
+
+    String responseString = response.getResponse().getContentAsString();
+    Articles updated = mapper.readValue(responseString, Articles.class);
+
+    assertEquals("New Title", updated.getTitle());
+    assertEquals("https://example.com/new", updated.getUrl());
+    assertEquals("New Explanation", updated.getExplanation());
+    assertEquals("new@example.com", updated.getSubmitterEmail());
+    assertEquals(updatedDate, updated.getDateAdded());
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_gets_404_when_putting_nonexistent_article() throws Exception {
+
+    Articles incoming =
+        Articles.builder()
+            .title("New Title")
+            .url("https://example.com/new")
+            .explanation("New Explanation")
+            .submitterEmail("new@example.com")
+            .dateAdded(LocalDateTime.parse("2022-02-04T00:00:00"))
+            .build();
+
+    when(articlesRepository.findById(21L)).thenReturn(Optional.empty());
+
+    String requestBody = mapper.writeValueAsString(incoming);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/articles?id=21")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .characterEncoding("utf-8")
+                    .content(requestBody)
+                    .with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    verify(articlesRepository, times(1)).findById(21L);
+
+    Map<String, Object> json = responseToJson(response);
     assertEquals("Articles with id 21 not found", json.get("message"));
   }
 }
