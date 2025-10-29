@@ -76,7 +76,6 @@ public class MenuItemReviewControllerTests extends ControllerTestCase {
   @Test
   public void test_that_logged_in_user_can_get_by_id_when_the_id_exists() throws Exception {
 
-    // arrange
     LocalDateTime ldt = LocalDateTime.parse("2022-01-03T00:00:00");
 
     MenuItemReview menuItemReview =
