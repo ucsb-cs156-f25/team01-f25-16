@@ -59,6 +59,27 @@ public class RecommendationRequestsController extends ApiController {
     return repository.save(incoming);
   }
 
+  @Operation(
+      summary = "Delete a single RecommendationRequests row by id",
+      description =
+          "Requires ADMIN. If the id exists, delete it and return a confirmation message; otherwise 404.")
+  @PreAuthorize("hasRole('ADMIN')")
+  @DeleteMapping("")
+  public Map<String, String> deleteRecommendationRequestById(
+      @Parameter(name = "id", description = "Primary key of the RecommendationRequests row")
+          @RequestParam
+          Long id) {
+
+    RecommendationRequests existing =
+        repository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(RecommendationRequests.class, id));
+
+    repository.delete(existing);
+
+    return Map.of("message", String.format("RecommendationRequests with id %d deleted", id));
+  }
+
   @Operation(summary = "Create a new recommendation request")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @PostMapping("/post")
