@@ -47,10 +47,10 @@ public class UCSBDiningCommonsMenuItemController extends ApiController {
     return repository.save(item);
   }
 
-  @Operation(summary = "Get a single menu item")
+  @Operation(summary = "Get a single menu item by id")
   @PreAuthorize("hasRole('ROLE_USER')")
   @GetMapping("")
-  public UCSBDiningCommonsMenuItem getById(@Parameter(name = "id") @RequestParam Long id) {
+  public UCSBDiningCommonsMenuItem getById(@RequestParam Long id) {
     UCSBDiningCommonsMenuItem item =
         repository
             .findById(id)
