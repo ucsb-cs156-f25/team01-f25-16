@@ -1,7 +1,6 @@
 package edu.ucsb.cs156.example.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -26,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -224,7 +224,8 @@ public class ArticlesControllerTests extends ControllerTestCase {
         mockMvc
             .perform(
                 put("/api/articles?id=21")
-                    .contentType("application/json")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .characterEncoding("utf-8")
                     .content(requestBody)
                     .with(csrf()))
             .andExpect(status().isOk())
@@ -264,7 +265,8 @@ public class ArticlesControllerTests extends ControllerTestCase {
         mockMvc
             .perform(
                 put("/api/articles?id=21")
-                    .contentType("application/json")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .characterEncoding("utf-8")
                     .content(requestBody)
                     .with(csrf()))
             .andExpect(status().isNotFound())

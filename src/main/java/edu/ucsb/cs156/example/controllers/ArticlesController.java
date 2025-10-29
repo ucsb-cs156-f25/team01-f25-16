@@ -7,6 +7,7 @@ import edu.ucsb.cs156.example.repositories.ArticlesRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,15 +35,6 @@ public class ArticlesController extends ApiController {
   public Iterable<Articles> allArticles() {
     Iterable<Articles> articles = articlesRepository.findAll();
     return articles;
-  }
-
-  @Operation(summary = "Get a single article")
-  @PreAuthorize("hasRole('ROLE_USER')")
-  @GetMapping("")
-  public Articles getById(@Parameter(name = "id") @RequestParam Long id) {
-    return articlesRepository
-        .findById(id)
-        .orElseThrow(() -> new EntityNotFoundException(Articles.class, id));
   }
 
   @Operation(summary = "Create a new article")
@@ -92,7 +84,7 @@ public class ArticlesController extends ApiController {
       description =
           "JSON payload containing updated values for title, url, explanation, submitterEmail, and dateAdded")
   public Articles updateArticle(
-      @Parameter(name = "id") @RequestParam Long id, @RequestBody Articles incoming) {
+      @Parameter(name = "id") @RequestParam Long id, @RequestBody @Valid Articles incoming) {
 
     Articles article =
         articlesRepository
