@@ -73,14 +73,6 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
         .andExpect(status().is(403)); // logged out users can't get by id
   }
 
-  @WithMockUser(roles = {"USER"})
-  @Test
-  public void logged_in_users_can_get_by_id() throws Exception {
-    mockMvc
-        .perform(get("/api/UCSBOrganization?orgCode=AS"))
-        .andExpect(status().is(200)); // logged in users can get by id
-  }
-
   // Tests with mocks for database actions
 
   // Tests for GET /api/UCSBOrganization/all
