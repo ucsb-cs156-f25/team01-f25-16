@@ -7,12 +7,12 @@ import edu.ucsb.cs156.example.repositories.ArticlesRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -37,15 +37,6 @@ import org.springframework.web.bind.annotation.RestController;
 <span class="fc" id="L37">    return articles;</span>
   }
 
-  @Operation(summary = &quot;Get a single article&quot;)
-  @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
-  @GetMapping(&quot;&quot;)
-  public Articles getById(@Parameter(name = &quot;id&quot;) @RequestParam Long id) {
-<span class="fc" id="L44">    return articlesRepository</span>
-<span class="fc" id="L45">        .findById(id)</span>
-<span class="fc" id="L46">        .orElseThrow(() -&gt; new EntityNotFoundException(Articles.class, id));</span>
-  }
-
   @Operation(summary = &quot;Create a new article&quot;)
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @PostMapping(&quot;/post&quot;)
@@ -63,31 +54,27 @@ import org.springframework.web.bind.annotation.RestController;
           LocalDateTime dateAdded)
       throws JsonProcessingException {
 
-<span class="fc" id="L66">    log.info(&quot;dateAdded={}&quot;, dateAdded);</span>
+<span class="fc" id="L57">    log.info(&quot;dateAdded={}&quot;, dateAdded);</span>
 
-<span class="fc" id="L68">    Articles article = new Articles();</span>
-<span class="fc" id="L69">    article.setTitle(title);</span>
-<span class="fc" id="L70">    article.setUrl(url);</span>
-<span class="fc" id="L71">    article.setExplanation(explanation);</span>
-<span class="fc" id="L72">    article.setSubmitterEmail(submitterEmail);</span>
-<span class="fc" id="L73">    article.setDateAdded(dateAdded);</span>
+<span class="fc" id="L59">    Articles article = new Articles();</span>
+<span class="fc" id="L60">    article.setTitle(title);</span>
+<span class="fc" id="L61">    article.setUrl(url);</span>
+<span class="fc" id="L62">    article.setExplanation(explanation);</span>
+<span class="fc" id="L63">    article.setSubmitterEmail(submitterEmail);</span>
+<span class="fc" id="L64">    article.setDateAdded(dateAdded);</span>
 
-<span class="fc" id="L75">    Articles savedArticle = articlesRepository.save(article);</span>
+<span class="fc" id="L66">    Articles savedArticle = articlesRepository.save(article);</span>
 
-<span class="fc" id="L77">    return savedArticle;</span>
+<span class="fc" id="L68">    return savedArticle;</span>
   }
 
-  @Operation(summary = &quot;Delete an article&quot;)
-  @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
-  @DeleteMapping(&quot;&quot;)
-  public Object deleteArticle(@Parameter(name = &quot;id&quot;) @RequestParam Long id) {
-<span class="fc" id="L84">    Articles article =</span>
-        articlesRepository
-<span class="fc" id="L86">            .findById(id)</span>
-<span class="fc" id="L87">            .orElseThrow(() -&gt; new EntityNotFoundException(Articles.class, id));</span>
-
-<span class="fc" id="L89">    articlesRepository.delete(article);</span>
-<span class="fc" id="L90">    return genericMessage(&quot;Articles with id %s deleted&quot;.formatted(id));</span>
+  @Operation(summary = &quot;Get a single article&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
+  @GetMapping(&quot;&quot;)
+  public Articles getById(@Parameter(name = &quot;id&quot;) @RequestParam Long id) {
+<span class="fc" id="L75">    return articlesRepository</span>
+<span class="fc" id="L76">        .findById(id)</span>
+<span class="fc" id="L77">        .orElseThrow(() -&gt; new EntityNotFoundException(Articles.class, id));</span>
   }
 
   @Operation(summary = &quot;Update an existing article&quot;)
@@ -97,22 +84,22 @@ import org.springframework.web.bind.annotation.RestController;
       description =
           &quot;JSON payload containing updated values for title, url, explanation, submitterEmail, and dateAdded&quot;)
   public Articles updateArticle(
-      @Parameter(name = &quot;id&quot;) @RequestParam Long id, @RequestBody Articles incoming) {
+      @Parameter(name = &quot;id&quot;) @RequestParam Long id, @RequestBody @Valid Articles incoming) {
 
-<span class="fc" id="L102">    Articles article =</span>
+<span class="fc" id="L89">    Articles article =</span>
         articlesRepository
-<span class="fc" id="L104">            .findById(id)</span>
-<span class="fc" id="L105">            .orElseThrow(() -&gt; new EntityNotFoundException(Articles.class, id));</span>
+<span class="fc" id="L91">            .findById(id)</span>
+<span class="fc" id="L92">            .orElseThrow(() -&gt; new EntityNotFoundException(Articles.class, id));</span>
 
-<span class="fc" id="L107">    article.setTitle(incoming.getTitle());</span>
-<span class="fc" id="L108">    article.setUrl(incoming.getUrl());</span>
-<span class="fc" id="L109">    article.setExplanation(incoming.getExplanation());</span>
-<span class="fc" id="L110">    article.setSubmitterEmail(incoming.getSubmitterEmail());</span>
-<span class="fc" id="L111">    article.setDateAdded(incoming.getDateAdded());</span>
+<span class="fc" id="L94">    article.setTitle(incoming.getTitle());</span>
+<span class="fc" id="L95">    article.setUrl(incoming.getUrl());</span>
+<span class="fc" id="L96">    article.setExplanation(incoming.getExplanation());</span>
+<span class="fc" id="L97">    article.setSubmitterEmail(incoming.getSubmitterEmail());</span>
+<span class="fc" id="L98">    article.setDateAdded(incoming.getDateAdded());</span>
 
-<span class="fc" id="L113">    articlesRepository.save(article);</span>
+<span class="fc" id="L100">    articlesRepository.save(article);</span>
 
-<span class="fc" id="L115">    return article;</span>
+<span class="fc" id="L102">    return article;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
