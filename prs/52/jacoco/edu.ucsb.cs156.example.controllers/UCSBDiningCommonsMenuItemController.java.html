@@ -47,16 +47,16 @@ import org.springframework.web.bind.annotation.RestController;
 <span class="fc" id="L47">    return repository.save(item);</span>
   }
 
-  @Operation(summary = &quot;Get a single menu item&quot;)
+  @Operation(summary = &quot;Get a single menu item by id&quot;)
   @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
   @GetMapping(&quot;&quot;)
-  public UCSBDiningCommonsMenuItem getById(@Parameter(name = &quot;id&quot;) @RequestParam Long id) {
-<span class="nc" id="L54">    UCSBDiningCommonsMenuItem item =</span>
+  public UCSBDiningCommonsMenuItem getById(@RequestParam Long id) {
+<span class="fc" id="L54">    UCSBDiningCommonsMenuItem item =</span>
         repository
-<span class="nc" id="L56">            .findById(id)</span>
-<span class="nc" id="L57">            .orElseThrow(() -&gt; new EntityNotFoundException(UCSBDiningCommonsMenuItem.class, id));</span>
+<span class="fc" id="L56">            .findById(id)</span>
+<span class="fc" id="L57">            .orElseThrow(() -&gt; new EntityNotFoundException(UCSBDiningCommonsMenuItem.class, id));</span>
 
-<span class="nc" id="L59">    return item;</span>
+<span class="fc" id="L59">    return item;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
