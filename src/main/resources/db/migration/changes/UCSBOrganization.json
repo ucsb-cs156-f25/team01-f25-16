@@ -24,17 +24,10 @@
                 "columns": [
                   {
                     "column": {
-                      "autoIncrement": true,
                       "constraints": {
                         "primaryKey": true,
                         "primaryKeyName": "UCSBORGANIZATION_PK"
                       },
-                      "name": "ID",
-                      "type": "BIGINT"
-                    }
-                  },
-                  {
-                    "column": {
                       "name": "ORG_CODE",
                       "type": "VARCHAR(255)"
                     }
