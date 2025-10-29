@@ -1,0 +1,60 @@
+package edu.ucsb.cs156.example.controllers;
+
+import edu.ucsb.cs156.example.entities.RecommendationRequests;
+import edu.ucsb.cs156.example.repositories.RecommendationRequestsRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@Tag(name = "RecommendationRequests")
+@RequestMapping("/api/recommendationrequests")
+@RestController
+@Slf4j
+public class RecommendationRequestsController extends ApiController {
+  @Autowired RecommendationRequestsRepository repository;
+
+  @Operation(summary = "List all recommendation requests")
+  @PreAuthorize("hasRole('ROLE_USER')")
+  @GetMapping("/all")
+  // check
+  public Iterable<RecommendationRequests> all() {
+    return repository.findAll();
+  }
+
+  @Operation(summary = "Create a new reecommendation request")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @PostMapping("/post")
+  public RecommendationRequests post(
+      @Parameter(name = "requesterEmail") @RequestParam String requesterEmail,
+      @Parameter(name = "professorEmail") @RequestParam String professorEmail,
+      @Parameter(name = "explanation") @RequestParam String explanation,
+      @Parameter(name = "dateRequested", description = "ISO date-time, e.g. 2025-10-28T12:34:56")
+          @RequestParam("dateRequested")
+          @DateTimeFormat(iso = ISO.DATE_TIME)
+          LocalDateTime dateRequestted,
+      @Parameter(name = "dateNeeded", description = "ISO date-time, e.g. 2025-11-05T17:00:00")
+          @RequestParam("dateNeeded")
+          @DateTimeFormat(iso = ISO.DATE_TIME)
+          LocalDateTime dateNeeded,
+      @Parameter(name = "done") @RequestParam boolean done) {
+    RecommendationRequests rr =
+        RecommendationRequests.builder()
+            .requesterEmail(requesterEmail)
+            .professorEmail(professorEmail)
+            .explanation(explanation)
+            .dateRequested(dateRequested)
+            .dateNeeded(dateNeeded)
+            .done(done)
+            .build();
+
+    return repository.save(rr);
+  }
+}
