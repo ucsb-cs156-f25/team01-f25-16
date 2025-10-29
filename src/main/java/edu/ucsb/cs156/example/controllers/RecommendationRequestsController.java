@@ -49,26 +49,14 @@ public class RecommendationRequestsController extends ApiController {
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @PutMapping("")
   public RecommendationRequests updateById(
-      @Parameter(name = "id") @RequestParam Long id,
-      @io.swagger.v3.oas.annotations.parameters.RequestBody(
-              description = "JSON body with new field values (id is ignored)")
-          @RequestBody
-          RecommendationRequests incoming) {
+      @RequestParam Long id, @RequestBody RecommendationRequests incoming) {
+    repository
+        .findById(id)
+        .orElseThrow(() -> new EntityNotFoundException(RecommendationRequests.class, id));
 
-    RecommendationRequests existing =
-        repository
-            .findById(id)
-            .orElseThrow(() -> new EntityNotFoundException(RecommendationRequests.class, id));
-
-    // copy over mutable fields (do NOT change id)
-    existing.setRequesterEmail(incoming.getRequesterEmail());
-    existing.setProfessorEmail(incoming.getProfessorEmail());
-    existing.setExplanation(incoming.getExplanation());
-    existing.setDateRequested(incoming.getDateRequested());
-    existing.setDateNeeded(incoming.getDateNeeded());
-    existing.setDone(incoming.isDone());
-
-    return repository.save(existing);
+    // Use the incoming payload directly
+    incoming.setId(id);
+    return repository.save(incoming);
   }
 
   @Operation(summary = "Create a new recommendation request")
