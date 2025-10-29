@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import edu.ucsb.cs156.example.ControllerTestCase;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -69,8 +71,21 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
   @Test
   public void logged_out_users_cannot_get_by_id() throws Exception {
     mockMvc
-        .perform(get("/api/ucsborganizations?orgCode=AS"))
+        .perform(get("/api/ucsborganizations?orgCode=GSAC"))
         .andExpect(status().is(403)); // logged out users can't get by id
+  }
+
+  // Authorization tests for PUT /api/ucsborganizations...
+
+  @Test
+  public void logged_out_users_cannot_put() throws Exception {
+    mockMvc.perform(put("/api/ucsborganizations?orgCode=GSAC")).andExpect(status().is(403));
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void logged_in_regular_users_cannot_put() throws Exception {
+    mockMvc.perform(put("/api/ucsborganizations?orgCode=GSAC")).andExpect(status().is(403));
   }
 
   // Tests with mocks for database actions
@@ -190,6 +205,80 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
     // act
     mockMvc
         .perform(get("/api/ucsborganizations?orgCode=NOTEXIST"))
+        .andExpect(status().isNotFound());
+  }
+
+  // Tests for PUT /api/ucsborganizations...
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_can_edit_an_existing_organization() throws Exception {
+    // arrange
+
+    UCSBOrganization orgOrig =
+        UCSBOrganization.builder()
+            .orgCode("GSAC")
+            .orgTranslationShort("Gaucho Sports Analytics")
+            .orgTranslation("Gaucho Sports Analytics Club")
+            .inactive(false)
+            .build();
+
+    UCSBOrganization orgEdited =
+        UCSBOrganization.builder()
+            .orgCode("GSAC")
+            .orgTranslationShort("Gaucho Sports Analytics Updated")
+            .orgTranslation("Gaucho Sports Analytics Club Updated")
+            .inactive(true)
+            .build();
+
+    String requestBody = mapper.writeValueAsString(orgEdited);
+
+    when(ucsbOrganizationRepository.findById(eq("GSAC"))).thenReturn(Optional.of(orgOrig));
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/ucsborganizations?orgCode=GSAC")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .characterEncoding("utf-8")
+                    .content(requestBody)
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+    verify(ucsbOrganizationRepository, times(1)).findById("GSAC");
+    verify(ucsbOrganizationRepository, times(1)).save(orgEdited);
+    String responseString = response.getResponse().getContentAsString();
+    assertEquals(requestBody, responseString);
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_cannot_edit_organization_that_does_not_exist() throws Exception {
+    // arrange
+
+    UCSBOrganization editedOrg =
+        UCSBOrganization.builder()
+            .orgCode("NOTEXIST")
+            .orgTranslationShort("Nonexistent Club")
+            .orgTranslation("Nonexistent Club")
+            .inactive(false)
+            .build();
+
+    String requestBody = mapper.writeValueAsString(editedOrg);
+
+    when(ucsbOrganizationRepository.findById(eq("NOTEXIST"))).thenReturn(Optional.empty());
+
+    // act
+    mockMvc
+        .perform(
+            put("/api/ucsborganizations?orgCode=NOTEXIST")
+                .contentType(MediaType.APPLICATION_JSON)
+                .characterEncoding("utf-8")
+                .content(requestBody)
+                .with(csrf()))
         .andExpect(status().isNotFound());
   }
 }
