@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** This is a REST controller for UCSBOrganization */
 @Tag(name = "UCSBOrganizations")
-@RequestMapping("/api/UCSBOrganization")
+@RequestMapping("/api/ucsborganization")
 @RestController
 @Slf4j
 public class UCSBOrganizationController extends ApiController {
