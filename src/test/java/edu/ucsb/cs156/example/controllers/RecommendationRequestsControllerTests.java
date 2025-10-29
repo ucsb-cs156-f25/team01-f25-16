@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -399,5 +400,88 @@ public class RecommendationRequestsControllerTests extends ControllerTestCase {
     org.assertj.core.api.Assertions.assertThat(body)
         .containsIgnoringCase("RecommendationRequests")
         .contains("999");
+  }
+
+  // ---------- AUTHZ: DELETE /api/recommendationrequests?id=... ----------
+
+  @Test
+  public void logged_out_users_cannot_delete() throws Exception {
+    mockMvc
+        .perform(delete("/api/recommendationrequests").param("id", "15"))
+        .andExpect(status().is(403));
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void regular_users_cannot_delete() throws Exception {
+    mockMvc
+        .perform(delete("/api/recommendationrequests").param("id", "15"))
+        .andExpect(status().is(403));
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_cannot_delete_without_csrf() throws Exception {
+    mockMvc
+        .perform(delete("/api/recommendationrequests").param("id", "15"))
+        .andExpect(status().isForbidden()); // CSRF required
+  }
+
+  // ---------- BEHAVIOR: DELETE deletes existing row (ADMIN) ----------
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_can_delete_existing_request() throws Exception {
+    // arrange
+    LocalDateTime dr = LocalDateTime.parse("2025-01-01T09:00:00");
+    LocalDateTime dn = LocalDateTime.parse("2025-02-01T17:00:00");
+
+    RecommendationRequests row =
+        RecommendationRequests.builder()
+            .requesterEmail("alice@ucsb.edu")
+            .professorEmail("prof@ucsb.edu")
+            .explanation("Grad apps")
+            .dateRequested(dr)
+            .dateNeeded(dn)
+            .done(false)
+            .build();
+
+    when(repository.findById(15L)).thenReturn(java.util.Optional.of(row));
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/recommendationrequests").param("id", "15").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+    verify(repository, times(1)).findById(15L);
+    verify(repository, times(1)).delete(row);
+
+    var json = responseToJson(response);
+    assertEquals("RecommendationRequests with id 15 deleted", json.get("message"));
+  }
+
+  // ---------- BEHAVIOR: DELETE non-existent row returns 404 (ADMIN) ----------
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_delete_nonexistent_returns_404() throws Exception {
+    // arrange
+    when(repository.findById(99L)).thenReturn(java.util.Optional.empty());
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/recommendationrequests").param("id", "99").with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    // assert
+    verify(repository, times(1)).findById(99L);
+    String body = response.getResponse().getContentAsString();
+    org.assertj.core.api.Assertions.assertThat(body)
+        .contains("RecommendationRequests with id 99 not found");
   }
 }
