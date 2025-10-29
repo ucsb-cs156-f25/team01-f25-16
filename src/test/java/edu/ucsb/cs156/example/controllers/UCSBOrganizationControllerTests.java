@@ -6,6 +6,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -18,6 +19,7 @@ import edu.ucsb.cs156.example.repositories.UserRepository;
 import edu.ucsb.cs156.example.testconfig.TestConfig;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -88,6 +90,19 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
     mockMvc.perform(put("/api/ucsborganizations?orgCode=GSAC")).andExpect(status().is(403));
   }
 
+  // Authorization tests for DELETE /api/ucsborganizations...
+
+  @Test
+  public void logged_out_users_cannot_delete() throws Exception {
+    mockMvc.perform(delete("/api/ucsborganizations?orgCode=GSAC")).andExpect(status().is(403));
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void logged_in_regular_users_cannot_delete() throws Exception {
+    mockMvc.perform(delete("/api/ucsborganizations?orgCode=GSAC")).andExpect(status().is(403));
+  }
+
   // Tests with mocks for database actions
 
   // Tests for GET /api/ucsborganizations/all
@@ -98,12 +113,12 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
 
     // arrange
 
-    UCSBOrganization as_ucsb =
+    UCSBOrganization fencing =
         UCSBOrganization.builder()
-            .orgCode("AS")
-            .orgTranslationShort("Associated Students")
-            .orgTranslation("Associated Students of UCSB")
-            .inactive(false)
+            .orgCode("FCSB")
+            .orgTranslationShort("Fencing Club")
+            .orgTranslation("UCSB Fencing Club")
+            .inactive(true)
             .build();
 
     UCSBOrganization gsac =
@@ -115,7 +130,7 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
             .build();
 
     ArrayList<UCSBOrganization> expectedOrganizations = new ArrayList<>();
-    expectedOrganizations.addAll(Arrays.asList(as_ucsb, gsac));
+    expectedOrganizations.addAll(Arrays.asList(fencing, gsac));
 
     when(ucsbOrganizationRepository.findAll()).thenReturn(expectedOrganizations);
 
@@ -279,6 +294,51 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
                 .characterEncoding("utf-8")
                 .content(requestBody)
                 .with(csrf()))
+        .andExpect(status().isNotFound());
+  }
+
+  // Tests for DELETE /api/ucsborganizations...
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_can_delete_an_existing_organization() throws Exception {
+    // arrange
+
+    UCSBOrganization gsac =
+        UCSBOrganization.builder()
+            .orgCode("GSAC")
+            .orgTranslationShort("Gaucho Sports Analytics")
+            .orgTranslation("Gaucho Sports Analytics Club")
+            .inactive(false)
+            .build();
+
+    when(ucsbOrganizationRepository.findById(eq("GSAC"))).thenReturn(Optional.of(gsac));
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/ucsborganizations?orgCode=GSAC").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+    verify(ucsbOrganizationRepository, times(1)).findById("GSAC");
+    verify(ucsbOrganizationRepository, times(1)).delete(gsac);
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("UCSBOrganization with id GSAC deleted", json.get("message"));
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_cannot_delete_organization_that_does_not_exist() throws Exception {
+    // arrange
+
+    when(ucsbOrganizationRepository.findById(eq("NOTEXIST"))).thenReturn(Optional.empty());
+
+    // act
+    mockMvc
+        .perform(delete("/api/ucsborganizations?orgCode=NOTEXIST").with(csrf()))
         .andExpect(status().isNotFound());
   }
 }
