@@ -113,12 +113,12 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
 
     // arrange
 
-    UCSBOrganization as_ucsb =
+    UCSBOrganization fencing =
         UCSBOrganization.builder()
-            .orgCode("AS")
-            .orgTranslationShort("Associated Students")
-            .orgTranslation("Associated Students of UCSB")
-            .inactive(false)
+            .orgCode("FCSB")
+            .orgTranslationShort("Fencing Club")
+            .orgTranslation("UCSB Fencing Club")
+            .inactive(true)
             .build();
 
     UCSBOrganization gsac =
@@ -130,7 +130,7 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
             .build();
 
     ArrayList<UCSBOrganization> expectedOrganizations = new ArrayList<>();
-    expectedOrganizations.addAll(Arrays.asList(as_ucsb, gsac));
+    expectedOrganizations.addAll(Arrays.asList(fencing, gsac));
 
     when(ucsbOrganizationRepository.findAll()).thenReturn(expectedOrganizations);
 
