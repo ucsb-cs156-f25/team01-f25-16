@@ -237,7 +237,6 @@ public class HelpRequestControllerTests extends ControllerTestCase {
             .andExpect(status().isNotFound())
             .andReturn();
 
-    // assert
     verify(helpRequestRepository, times(1)).findById(999L);
     Map<String, Object> json = responseToJson(response);
     assertEquals("HelpRequest with id 999 not found", json.get("message"));
