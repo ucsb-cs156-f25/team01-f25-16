@@ -101,7 +101,7 @@ public class HelpRequestControllerTests extends ControllerTestCase {
             .tableOrBreakoutRoom("Table 3")
             .requestTime(java.time.LocalDateTime.of(2023, 2, 2, 14, 0))
             .explanation("Help please")
-            .solved(false)
+            .solved(true)
             .build();
 
     HelpRequest saved =
@@ -112,7 +112,7 @@ public class HelpRequestControllerTests extends ControllerTestCase {
             .tableOrBreakoutRoom(req.getTableOrBreakoutRoom())
             .requestTime(req.getRequestTime())
             .explanation(req.getExplanation())
-            .solved(false)
+            .solved(true)
             .build();
 
     when(helpRequestRepository.save(eq(req))).thenReturn(saved);
@@ -125,7 +125,7 @@ public class HelpRequestControllerTests extends ControllerTestCase {
             "Table 3",
             "2023-02-02T14:00:00",
             "Help please",
-            "false");
+            "true");
 
     MvcResult response =
         mockMvc.perform(post(url).with(csrf())).andExpect(status().isOk()).andReturn();
