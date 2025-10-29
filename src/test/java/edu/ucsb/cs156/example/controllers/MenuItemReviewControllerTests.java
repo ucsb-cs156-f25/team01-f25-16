@@ -39,8 +39,6 @@ public class MenuItemReviewControllerTests extends ControllerTestCase {
 
   @MockBean UserRepository userRepository;
 
-  // Authorization tests for /api/menuitemreviews/admin/all
-
   @Test
   public void logged_out_users_cannot_get_all() throws Exception {
     mockMvc
@@ -60,8 +58,6 @@ public class MenuItemReviewControllerTests extends ControllerTestCase {
         .perform(get("/api/menuitemreviews?id=7"))
         .andExpect(status().is(403)); // logged out users can't get by id
   }
-
-  // Authorization tests for /api/menuitemreviews/post
 
   @Test
   public void logged_out_users_cannot_post() throws Exception {
