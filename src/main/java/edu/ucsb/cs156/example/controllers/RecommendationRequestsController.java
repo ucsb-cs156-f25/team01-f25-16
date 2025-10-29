@@ -32,6 +32,7 @@ public class RecommendationRequestsController extends ApiController {
     return repository.findAll();
   }
 
+  // pls work
   @Operation(summary = "Get a single RecommendationRequest by id")
   @PreAuthorize("hasRole('ROLE_USER')")
   @GetMapping("")
