@@ -42,7 +42,7 @@ public class RecommendationRequestsController extends ApiController {
       @Parameter(name = "dateRequested", description = "ISO date-time, e.g. 2025-10-28T12:34:56")
           @RequestParam("dateRequested")
           @DateTimeFormat(iso = ISO.DATE_TIME)
-          LocalDateTime dateRequestted,
+          LocalDateTime dateRequested,
       @Parameter(name = "dateNeeded", description = "ISO date-time, e.g. 2025-11-05T17:00:00")
           @RequestParam("dateNeeded")
           @DateTimeFormat(iso = ISO.DATE_TIME)
