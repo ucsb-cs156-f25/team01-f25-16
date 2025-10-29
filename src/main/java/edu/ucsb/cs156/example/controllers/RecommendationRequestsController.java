@@ -7,11 +7,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDateTime;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -57,6 +59,27 @@ public class RecommendationRequestsController extends ApiController {
     // Use the incoming payload directly
     incoming.setId(id);
     return repository.save(incoming);
+  }
+
+  @Operation(
+      summary = "Delete a single RecommendationRequests row by id",
+      description =
+          "Requires ADMIN. If the id exists, delete it and return a confirmation message; otherwise 404.")
+  @PreAuthorize("hasRole('ADMIN')")
+  @DeleteMapping("")
+  public Map<String, String> deleteRecommendationRequestById(
+      @Parameter(name = "id", description = "Primary key of the RecommendationRequests row")
+          @RequestParam
+          Long id) {
+
+    RecommendationRequests existing =
+        repository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(RecommendationRequests.class, id));
+
+    repository.delete(existing);
+
+    return Map.of("message", String.format("RecommendationRequests with id %d deleted", id));
   }
 
   @Operation(summary = "Create a new recommendation request")
