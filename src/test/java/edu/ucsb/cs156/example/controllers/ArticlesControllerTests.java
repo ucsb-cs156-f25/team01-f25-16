@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.example.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -18,6 +19,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -36,6 +39,11 @@ public class ArticlesControllerTests extends ControllerTestCase {
   @Test
   public void logged_out_users_cannot_get_all() throws Exception {
     mockMvc.perform(get("/api/articles/all")).andExpect(status().is(403));
+  }
+
+  @Test
+  public void logged_out_users_cannot_get_by_id() throws Exception {
+    mockMvc.perform(get("/api/articles?id=21")).andExpect(status().is(403));
   }
 
   @WithMockUser(roles = {"USER"})
@@ -139,5 +147,46 @@ public class ArticlesControllerTests extends ControllerTestCase {
     String expectedJson = mapper.writeValueAsString(article);
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void logged_in_user_can_get_article_by_id() throws Exception {
+
+    LocalDateTime ldt = LocalDateTime.parse("2022-01-03T00:00:00");
+
+    Articles article =
+        Articles.builder()
+            .title("Article 1")
+            .url("https://example.com/1")
+            .explanation("Explains 1")
+            .submitterEmail("one@example.com")
+            .dateAdded(ldt)
+            .build();
+
+    when(articlesRepository.findById(eq(21L))).thenReturn(Optional.of(article));
+
+    MvcResult response =
+        mockMvc.perform(get("/api/articles?id=21")).andExpect(status().isOk()).andReturn();
+
+    verify(articlesRepository, times(1)).findById(eq(21L));
+    String expectedJson = mapper.writeValueAsString(article);
+    String responseString = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, responseString);
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void logged_in_user_gets_404_when_article_not_found() throws Exception {
+
+    when(articlesRepository.findById(eq(21L))).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc.perform(get("/api/articles?id=21")).andExpect(status().isNotFound()).andReturn();
+
+    verify(articlesRepository, times(1)).findById(eq(21L));
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("EntityNotFoundException", json.get("type"));
+    assertEquals("Articles with id 21 not found", json.get("message"));
   }
 }
