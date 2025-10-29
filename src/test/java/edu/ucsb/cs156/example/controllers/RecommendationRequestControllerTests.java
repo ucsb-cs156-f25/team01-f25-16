@@ -33,7 +33,7 @@ public class RecommendationRequestsControllerTests extends ControllerTestCase {
 
   @MockBean UserRepository userRepository;
 
-  // ===== AUTHZ for GET /api/recommendationrequests/all =====
+  // ---------- AUTHZ: GET /api/recommendationrequests/all ----------
 
   @Test
   public void logged_out_users_cannot_get_all() throws Exception {
@@ -46,7 +46,7 @@ public class RecommendationRequestsControllerTests extends ControllerTestCase {
     mockMvc.perform(get("/api/recommendationrequests/all")).andExpect(status().isOk());
   }
 
-  // ===== AUTHZ for POST /api/recommendationrequests/post =====
+  // ---------- AUTHZ: POST /api/recommendationrequests/post ----------
 
   @Test
   public void logged_out_users_cannot_post() throws Exception {
@@ -59,79 +59,85 @@ public class RecommendationRequestsControllerTests extends ControllerTestCase {
     mockMvc.perform(post("/api/recommendationrequests/post")).andExpect(status().is(403));
   }
 
-  // ===== Behavior: GET /all returns repository data =====
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_cannot_post_without_csrf() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/recommendationrequests/post")
+                .param("requesterEmail", "no-csrf@ucsb.edu")
+                .param("professorEmail", "prof@ucsb.edu")
+                .param("explanation", "test")
+                .param("dateRequested", "2025-01-01T00:00:00")
+                .param("dateNeeded", "2025-01-02T00:00:00")
+                .param("done", "false"))
+        .andExpect(status().isForbidden()); // 403 due to missing CSRF
+  }
+
+  // ---------- BEHAVIOR: GET /all returns repository data ----------
 
   @WithMockUser(roles = {"USER"})
   @Test
-  public void logged_in_user_gets_all_recommendationrequests() throws Exception {
-    // arrange
-    LocalDateTime dt1_req = LocalDateTime.parse("2025-01-01T09:00:00");
-    LocalDateTime dt1_need = LocalDateTime.parse("2025-02-01T17:00:00");
-
+  public void get_all_returns_list_and_calls_repo() throws Exception {
+    LocalDateTime r1_req = LocalDateTime.parse("2025-01-01T09:00:00");
+    LocalDateTime r1_need = LocalDateTime.parse("2025-02-01T17:00:00");
     RecommendationRequests r1 =
         RecommendationRequests.builder()
             .requesterEmail("alice@ucsb.edu")
             .professorEmail("prof1@ucsb.edu")
-            .explanation("Graduate school application")
-            .dateRequested(dt1_req)
-            .dateNeeded(dt1_need)
+            .explanation("Grad apps")
+            .dateRequested(r1_req)
+            .dateNeeded(r1_need)
             .done(false)
             .build();
 
-    LocalDateTime dt2_req = LocalDateTime.parse("2025-03-10T10:30:00");
-    LocalDateTime dt2_need = LocalDateTime.parse("2025-03-25T23:59:59");
-
+    LocalDateTime r2_req = LocalDateTime.parse("2025-03-10T10:30:00");
+    LocalDateTime r2_need = LocalDateTime.parse("2025-03-25T23:59:59");
     RecommendationRequests r2 =
         RecommendationRequests.builder()
             .requesterEmail("bob@ucsb.edu")
             .professorEmail("prof2@ucsb.edu")
-            .explanation("Internship recommendation")
-            .dateRequested(dt2_req)
-            .dateNeeded(dt2_need)
+            .explanation("Internship")
+            .dateRequested(r2_req)
+            .dateNeeded(r2_need)
             .done(true)
             .build();
 
-    ArrayList<RecommendationRequests> expected = new ArrayList<>();
-    expected.addAll(Arrays.asList(r1, r2));
-
+    var expected = new ArrayList<>(Arrays.asList(r1, r2));
     when(repository.findAll()).thenReturn(expected);
 
-    // act
     MvcResult response =
         mockMvc
             .perform(get("/api/recommendationrequests/all"))
             .andExpect(status().isOk())
             .andReturn();
 
-    // assert
     verify(repository, times(1)).findAll();
     String expectedJson = mapper.writeValueAsString(expected);
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
   }
 
-  // ===== Behavior: POST /post creates a new row (ADMIN only) =====
+  // ---------- BEHAVIOR: POST /post creates rows (ADMIN) ----------
 
   @WithMockUser(roles = {"ADMIN", "USER"})
   @Test
-  public void admin_can_post_new_recommendationrequest() throws Exception {
-    // arrange
-    LocalDateTime dt_req = LocalDateTime.parse("2025-10-28T13:45:00");
-    LocalDateTime dt_need = LocalDateTime.parse("2025-11-05T17:00:00");
+  public void admin_can_post_new_request_done_false() throws Exception {
+    LocalDateTime dr = LocalDateTime.parse("2025-10-28T13:45:00");
+    LocalDateTime dn = LocalDateTime.parse("2025-11-05T17:00:00");
 
     RecommendationRequests toSave =
         RecommendationRequests.builder()
             .requesterEmail("saqif@ucsb.edu")
             .professorEmail("vigna@ucsb.edu")
             .explanation("PhD applications")
-            .dateRequested(dt_req)
-            .dateNeeded(dt_need)
+            .dateRequested(dr)
+            .dateNeeded(dn)
             .done(false)
             .build();
 
     when(repository.save(eq(toSave))).thenReturn(toSave);
 
-    // act
     MvcResult response =
         mockMvc
             .perform(
@@ -146,7 +152,44 @@ public class RecommendationRequestsControllerTests extends ControllerTestCase {
             .andExpect(status().isOk())
             .andReturn();
 
-    // assert
+    verify(repository, times(1)).save(toSave);
+    String expectedJson = mapper.writeValueAsString(toSave);
+    String responseString = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, responseString);
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_can_post_new_request_done_true() throws Exception {
+    LocalDateTime dr = LocalDateTime.parse("2025-12-01T08:00:00");
+    LocalDateTime dn = LocalDateTime.parse("2025-12-15T17:00:00");
+
+    RecommendationRequests toSave =
+        RecommendationRequests.builder()
+            .requesterEmail("user@ucsb.edu")
+            .professorEmail("advisor@ucsb.edu")
+            .explanation("Scholarship reference")
+            .dateRequested(dr)
+            .dateNeeded(dn)
+            .done(true)
+            .build();
+
+    when(repository.save(eq(toSave))).thenReturn(toSave);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/recommendationrequests/post")
+                    .param("requesterEmail", "user@ucsb.edu")
+                    .param("professorEmail", "advisor@ucsb.edu")
+                    .param("explanation", "Scholarship reference")
+                    .param("dateRequested", "2025-12-01T08:00:00")
+                    .param("dateNeeded", "2025-12-15T17:00:00")
+                    .param("done", "true")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
     verify(repository, times(1)).save(toSave);
     String expectedJson = mapper.writeValueAsString(toSave);
     String responseString = response.getResponse().getContentAsString();
