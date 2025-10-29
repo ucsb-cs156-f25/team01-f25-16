@@ -33,49 +33,49 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
 
   @MockBean UserRepository userRepository;
 
-  // Authorization tests for /api/ucsborganization/admin/all
+  // Authorization tests for /api/ucsborganizations/admin/all
 
   @Test
   public void logged_out_users_cannot_get_all() throws Exception {
     mockMvc
-        .perform(get("/api/ucsborganization/all"))
+        .perform(get("/api/ucsborganizations/all"))
         .andExpect(status().is(403)); // logged out users can't get all
   }
 
   @WithMockUser(roles = {"USER"})
   @Test
   public void logged_in_users_can_get_all() throws Exception {
-    mockMvc.perform(get("/api/ucsborganization/all")).andExpect(status().is(200)); // logged
+    mockMvc.perform(get("/api/ucsborganizations/all")).andExpect(status().is(200)); // logged
   }
 
-  // Authorization tests for /api/ucsborganization/post
+  // Authorization tests for /api/ucsborganizations/post
   // (Perhaps should also have these for put and delete)
 
   @Test
   public void logged_out_users_cannot_post() throws Exception {
-    mockMvc.perform(post("/api/ucsborganization/post")).andExpect(status().is(403));
+    mockMvc.perform(post("/api/ucsborganizations/post")).andExpect(status().is(403));
   }
 
   @WithMockUser(roles = {"USER"})
   @Test
   public void logged_in_regular_users_cannot_post() throws Exception {
     mockMvc
-        .perform(post("/api/ucsborganization/post"))
+        .perform(post("/api/ucsborganizations/post"))
         .andExpect(status().is(403)); // only admins can post
   }
 
-  // Authorization tests for GET /api/ucsborganization?orgCode=...
+  // Authorization tests for GET /api/ucsborganizations?orgCode=...
 
   @Test
   public void logged_out_users_cannot_get_by_id() throws Exception {
     mockMvc
-        .perform(get("/api/ucsborganization?orgCode=AS"))
+        .perform(get("/api/ucsborganizations?orgCode=AS"))
         .andExpect(status().is(403)); // logged out users can't get by id
   }
 
   // Tests with mocks for database actions
 
-  // Tests for GET /api/ucsborganization/all
+  // Tests for GET /api/ucsborganizations/all
 
   @WithMockUser(roles = {"USER"})
   @Test
@@ -106,7 +106,7 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
 
     // act
     MvcResult response =
-        mockMvc.perform(get("/api/ucsborganization/all")).andExpect(status().isOk()).andReturn();
+        mockMvc.perform(get("/api/ucsborganizations/all")).andExpect(status().isOk()).andReturn();
 
     // assert
 
@@ -116,7 +116,7 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
     assertEquals(expectedJson, responseString);
   }
 
-  // Tests for POST /api/ucsborganization...
+  // Tests for POST /api/ucsborganizations...
 
   @WithMockUser(roles = {"ADMIN", "USER"})
   @Test
@@ -137,7 +137,7 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
     MvcResult response =
         mockMvc
             .perform(
-                post("/api/ucsborganization/post?orgCode=FCSB&orgTranslationShort=Fencing Club&orgTranslation=UCSB Fencing Club&inactive=true")
+                post("/api/ucsborganizations/post?orgCode=FCSB&orgTranslationShort=Fencing Club&orgTranslation=UCSB Fencing Club&inactive=true")
                     .with(csrf()))
             .andExpect(status().isOk())
             .andReturn();
@@ -149,7 +149,7 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
     assertEquals(expectedJson, responseString);
   }
 
-  // Tests for GET /api/ucsborganization?orgCode=...
+  // Tests for GET /api/ucsborganizations?orgCode=...
 
   @WithMockUser(roles = {"USER"})
   @Test
@@ -169,7 +169,7 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
     // act
     MvcResult response =
         mockMvc
-            .perform(get("/api/ucsborganization?orgCode=GSAC"))
+            .perform(get("/api/ucsborganizations?orgCode=GSAC"))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -188,6 +188,8 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
     when(ucsbOrganizationRepository.findById(eq("NOTEXIST"))).thenReturn(Optional.empty());
 
     // act
-    mockMvc.perform(get("/api/ucsborganization?orgCode=NOTEXIST")).andExpect(status().isNotFound());
+    mockMvc
+        .perform(get("/api/ucsborganizations?orgCode=NOTEXIST"))
+        .andExpect(status().isNotFound());
   }
 }
