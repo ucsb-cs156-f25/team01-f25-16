@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.example.entities;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -24,5 +25,7 @@ public class Articles {
   private String url;
   private String explanation;
   private String submitterEmail;
+
+  @Column(name = "TIME_ADDED")
   private LocalDateTime dateAdded;
 }
