@@ -22,17 +22,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @Slf4j
 public class RecommendationRequestsController extends ApiController {
+
   @Autowired RecommendationRequestsRepository repository;
 
   @Operation(summary = "List all recommendation requests")
   @PreAuthorize("hasRole('ROLE_USER')")
   @GetMapping("/all")
-  // check
   public Iterable<RecommendationRequests> all() {
     return repository.findAll();
   }
 
-  @Operation(summary = "Create a new reecommendation request")
+  @Operation(summary = "Create a new recommendation request")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @PostMapping("/post")
   public RecommendationRequests post(
