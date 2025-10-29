@@ -17,6 +17,7 @@ import edu.ucsb.cs156.example.repositories.UserRepository;
 import edu.ucsb.cs156.example.testconfig.TestConfig;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -32,40 +33,57 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
 
   @MockBean UserRepository userRepository;
 
-  // Authorization tests for /api/ucsborganizations/admin/all
+  // Authorization tests for /api/UCSBOrganization/admin/all
 
   @Test
   public void logged_out_users_cannot_get_all() throws Exception {
     mockMvc
-        .perform(get("/api/ucsborganizations/all"))
+        .perform(get("/api/UCSBOrganization/all"))
         .andExpect(status().is(403)); // logged out users can't get all
   }
 
   @WithMockUser(roles = {"USER"})
   @Test
   public void logged_in_users_can_get_all() throws Exception {
-    mockMvc.perform(get("/api/ucsborganizations/all")).andExpect(status().is(200)); // logged
+    mockMvc.perform(get("/api/UCSBOrganization/all")).andExpect(status().is(200)); // logged
   }
 
-  // Authorization tests for /api/ucsborganizations/post
+  // Authorization tests for /api/UCSBOrganization/post
   // (Perhaps should also have these for put and delete)
 
   @Test
   public void logged_out_users_cannot_post() throws Exception {
-    mockMvc.perform(post("/api/ucsborganizations/post")).andExpect(status().is(403));
+    mockMvc.perform(post("/api/UCSBOrganization/post")).andExpect(status().is(403));
   }
 
   @WithMockUser(roles = {"USER"})
   @Test
   public void logged_in_regular_users_cannot_post() throws Exception {
     mockMvc
-        .perform(post("/api/ucsborganizations/post"))
+        .perform(post("/api/UCSBOrganization/post"))
         .andExpect(status().is(403)); // only admins can post
+  }
+
+  // Authorization tests for GET /api/UCSBOrganization?orgCode=...
+
+  @Test
+  public void logged_out_users_cannot_get_by_id() throws Exception {
+    mockMvc
+        .perform(get("/api/UCSBOrganization?orgCode=AS"))
+        .andExpect(status().is(403)); // logged out users can't get by id
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void logged_in_users_can_get_by_id() throws Exception {
+    mockMvc
+        .perform(get("/api/UCSBOrganization?orgCode=AS"))
+        .andExpect(status().is(200)); // logged in users can get by id
   }
 
   // Tests with mocks for database actions
 
-  // Tests for GET /api/ucsborganizations/all
+  // Tests for GET /api/UCSBOrganization/all
 
   @WithMockUser(roles = {"USER"})
   @Test
@@ -96,7 +114,7 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
 
     // act
     MvcResult response =
-        mockMvc.perform(get("/api/ucsborganizations/all")).andExpect(status().isOk()).andReturn();
+        mockMvc.perform(get("/api/UCSBOrganization/all")).andExpect(status().isOk()).andReturn();
 
     // assert
 
@@ -106,7 +124,7 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
     assertEquals(expectedJson, responseString);
   }
 
-  // Tests for POST /api/ucsborganizations...
+  // Tests for POST /api/UCSBOrganization...
 
   @WithMockUser(roles = {"ADMIN", "USER"})
   @Test
@@ -127,7 +145,7 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
     MvcResult response =
         mockMvc
             .perform(
-                post("/api/ucsborganizations/post?orgCode=FCSB&orgTranslationShort=Fencing Club&orgTranslation=UCSB Fencing Club&inactive=true")
+                post("/api/UCSBOrganization/post?orgCode=FCSB&orgTranslationShort=Fencing Club&orgTranslation=UCSB Fencing Club&inactive=true")
                     .with(csrf()))
             .andExpect(status().isOk())
             .andReturn();
@@ -137,5 +155,47 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
     String expectedJson = mapper.writeValueAsString(fencing);
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
+  }
+
+  // Tests for GET /api/UCSBOrganization?orgCode=...
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void logged_in_user_can_get_by_id_when_the_id_exists() throws Exception {
+    // arrange
+
+    UCSBOrganization gsac_ucsb =
+        UCSBOrganization.builder()
+            .orgCode("GSAC")
+            .orgTranslationShort("Gaucho Sports Analytics")
+            .orgTranslation("Gaucho Sports Analytics Club")
+            .inactive(false)
+            .build();
+
+    when(ucsbOrganizationRepository.findById(eq("GSAC"))).thenReturn(Optional.of(gsac_ucsb));
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/UCSBOrganization?orgCode=GSAC"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+    verify(ucsbOrganizationRepository, times(1)).findById("GSAC");
+    String expectedJson = mapper.writeValueAsString(gsac_ucsb);
+    String responseString = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, responseString);
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void logged_in_user_can_get_by_id_when_the_id_does_not_exist() throws Exception {
+    // arrange
+
+    when(ucsbOrganizationRepository.findById(eq("NOTEXIST"))).thenReturn(Optional.empty());
+
+    // act
+    mockMvc.perform(get("/api/UCSBOrganization?orgCode=NOTEXIST")).andExpect(status().isNotFound());
   }
 }

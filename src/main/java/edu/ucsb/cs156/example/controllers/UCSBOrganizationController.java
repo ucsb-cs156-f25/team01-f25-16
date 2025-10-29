@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.example.controllers;
 
 import edu.ucsb.cs156.example.entities.UCSBOrganization;
+import edu.ucsb.cs156.example.errors.EntityNotFoundException;
 import edu.ucsb.cs156.example.repositories.UCSBOrganizationRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** This is a REST controller for UCSBOrganization */
 @Tag(name = "UCSBOrganizations")
-@RequestMapping("/api/ucsborganizations")
+@RequestMapping("/api/UCSBOrganization")
 @RestController
 @Slf4j
 public class UCSBOrganizationController extends ApiController {
@@ -63,5 +64,23 @@ public class UCSBOrganizationController extends ApiController {
     UCSBOrganization savedOrganization = ucsbOrganizationRepository.save(organization);
 
     return savedOrganization;
+  }
+
+  /**
+   * This method returns a single organization.
+   *
+   * @param orgCode code of the organization
+   * @return a single organization
+   */
+  @Operation(summary = "Get a single organization")
+  @PreAuthorize("hasRole('ROLE_USER')")
+  @GetMapping("")
+  public UCSBOrganization getById(@Parameter(name = "orgCode") @RequestParam String orgCode) {
+    UCSBOrganization organization =
+        ucsbOrganizationRepository
+            .findById(orgCode)
+            .orElseThrow(() -> new EntityNotFoundException(UCSBOrganization.class, orgCode));
+
+    return organization;
   }
 }
