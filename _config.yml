@@ -23,4 +23,4 @@ repo_name: "TBD"
 repo: ucsb-cs156-f25/team01-f25-16
 owner: ucsb-cs156-f25
 repo_name: team01-f25-16
-pull_requests: [{"author":{"id":"U_kgDOCBQ7GQ","is_bot":false,"login":"Saqif-Ayaan","name":""},"headRefName":"create-del2-recommendation-requests","number":78,"title":"Create DEL endpoint for recommendation requests","url":"https://github.com/ucsb-cs156-f25/team01-f25-16/pull/78"},{"author":{"id":"U_kgDOCBQ7GQ","is_bot":false,"login":"Saqif-Ayaan","name":""},"headRefName":"create-put-recommendation-requests","number":76,"title":"Create PUT endpoint for recommendation requests","url":"https://github.com/ucsb-cs156-f25/team01-f25-16/pull/76"}]
+pull_requests: []
