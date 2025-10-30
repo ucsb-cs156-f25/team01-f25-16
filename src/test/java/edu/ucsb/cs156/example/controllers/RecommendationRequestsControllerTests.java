@@ -195,4 +195,68 @@ public class RecommendationRequestsControllerTests extends ControllerTestCase {
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
   }
+
+  // ---------- AUTHZ: GET /api/recommendationrequests?id=... ----------
+  // pls workrk
+  @Test
+  public void logged_out_users_cannot_get_by_id() throws Exception {
+    mockMvc
+        .perform(get("/api/recommendationrequests").param("id", "123"))
+        .andExpect(status().is(403));
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void logged_in_user_get_by_id_found_returns_record() throws Exception {
+    // arrange
+    LocalDateTime dr = LocalDateTime.parse("2025-10-28T13:45:00");
+    LocalDateTime dn = LocalDateTime.parse("2025-11-05T17:00:00");
+
+    RecommendationRequests rr =
+        RecommendationRequests.builder()
+            .requesterEmail("alice@ucsb.edu")
+            .professorEmail("prof@ucsb.edu")
+            .explanation("Grad apps")
+            .dateRequested(dr)
+            .dateNeeded(dn)
+            .done(false)
+            .build();
+
+    when(repository.findById(123L)).thenReturn(java.util.Optional.of(rr));
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/recommendationrequests").param("id", "123"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+    verify(repository, times(1)).findById(123L);
+    String expectedJson = mapper.writeValueAsString(rr);
+    String responseString = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, responseString);
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void logged_in_user_get_by_id_not_found_returns_404() throws Exception {
+    // arrange
+    when(repository.findById(999L)).thenReturn(java.util.Optional.empty());
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/recommendationrequests").param("id", "999"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    // assert
+    verify(repository, times(1)).findById(999L);
+    String body = response.getResponse().getContentAsString();
+    // message format varies by template; assert on key parts to be robust
+    org.assertj.core.api.Assertions.assertThat(body)
+        .containsIgnoringCase("RecommendationRequests")
+        .contains("999");
+  }
 }
