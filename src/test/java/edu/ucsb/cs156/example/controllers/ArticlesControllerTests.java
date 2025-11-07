@@ -5,6 +5,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -276,5 +277,52 @@ public class ArticlesControllerTests extends ControllerTestCase {
 
     Map<String, Object> json = responseToJson(response);
     assertEquals("Articles with id 21 not found", json.get("message"));
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_can_delete_article() throws Exception {
+
+    Articles article =
+        Articles.builder()
+            .id(15L)
+            .title("Article 15")
+            .url("https://example.com/15")
+            .explanation("Explains 15")
+            .submitterEmail("fifteen@example.com")
+            .dateAdded(LocalDateTime.parse("2022-04-01T00:00:00"))
+            .build();
+
+    when(articlesRepository.findById(15L)).thenReturn(Optional.of(article));
+
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/articles?id=15").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(articlesRepository, times(1)).findById(15L);
+    verify(articlesRepository, times(1)).delete(article);
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("Article with id 15 deleted", json.get("message"));
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_cannot_delete_nonexistent_article() throws Exception {
+
+    when(articlesRepository.findById(15L)).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/articles?id=15").with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    verify(articlesRepository, times(1)).findById(15L);
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("Articles with id 15 not found", json.get("message"));
   }
 }
