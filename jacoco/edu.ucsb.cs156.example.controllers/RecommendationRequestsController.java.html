@@ -7,13 +7,17 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDateTime;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,8 +25,8 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = &quot;RecommendationRequests&quot;)
 @RequestMapping(&quot;/api/recommendationrequests&quot;)
 @RestController
-<span class="fc" id="L24">@Slf4j</span>
-<span class="fc" id="L25">public class RecommendationRequestsController extends ApiController {</span>
+<span class="fc" id="L28">@Slf4j</span>
+<span class="fc" id="L29">public class RecommendationRequestsController extends ApiController {</span>
 
   @Autowired RecommendationRequestsRepository repository;
 
@@ -30,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
   @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
   @GetMapping(&quot;/all&quot;)
   public Iterable&lt;RecommendationRequests&gt; all() {
-<span class="fc" id="L33">    return repository.findAll();</span>
+<span class="fc" id="L37">    return repository.findAll();</span>
   }
 
   // pls work
@@ -38,9 +42,44 @@ import org.springframework.web.bind.annotation.RestController;
   @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
   @GetMapping(&quot;&quot;)
   public RecommendationRequests getById(@Parameter(name = &quot;id&quot;) @RequestParam Long id) {
-<span class="fc" id="L41">    return repository</span>
-<span class="fc" id="L42">        .findById(id)</span>
-<span class="fc" id="L43">        .orElseThrow(() -&gt; new EntityNotFoundException(RecommendationRequests.class, id));</span>
+<span class="fc" id="L45">    return repository</span>
+<span class="fc" id="L46">        .findById(id)</span>
+<span class="fc" id="L47">        .orElseThrow(() -&gt; new EntityNotFoundException(RecommendationRequests.class, id));</span>
+  }
+
+  @Operation(summary = &quot;Update a RecommendationRequest by id&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+  @PutMapping(&quot;&quot;)
+  public RecommendationRequests updateById(
+      @RequestParam Long id, @RequestBody RecommendationRequests incoming) {
+<span class="fc" id="L55">    repository</span>
+<span class="fc" id="L56">        .findById(id)</span>
+<span class="fc" id="L57">        .orElseThrow(() -&gt; new EntityNotFoundException(RecommendationRequests.class, id));</span>
+
+    // Use the incoming payload directly
+<span class="fc" id="L60">    incoming.setId(id);</span>
+<span class="fc" id="L61">    return repository.save(incoming);</span>
+  }
+
+  @Operation(
+      summary = &quot;Delete a single RecommendationRequests row by id&quot;,
+      description =
+          &quot;Requires ADMIN. If the id exists, delete it and return a confirmation message; otherwise 404.&quot;)
+  @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+  @DeleteMapping(&quot;&quot;)
+  public Map&lt;String, String&gt; deleteRecommendationRequestById(
+      @Parameter(name = &quot;id&quot;, description = &quot;Primary key of the RecommendationRequests row&quot;)
+          @RequestParam
+          Long id) {
+
+<span class="fc" id="L75">    RecommendationRequests existing =</span>
+        repository
+<span class="fc" id="L77">            .findById(id)</span>
+<span class="fc" id="L78">            .orElseThrow(() -&gt; new EntityNotFoundException(RecommendationRequests.class, id));</span>
+
+<span class="fc" id="L80">    repository.delete(existing);</span>
+
+<span class="fc" id="L82">    return Map.of(&quot;message&quot;, String.format(&quot;RecommendationRequests with id %d deleted&quot;, id));</span>
   }
 
   @Operation(summary = &quot;Create a new recommendation request&quot;)
@@ -60,16 +99,16 @@ import org.springframework.web.bind.annotation.RestController;
           LocalDateTime dateNeeded,
       @Parameter(name = &quot;done&quot;) @RequestParam boolean done) {
     RecommendationRequests rr =
-<span class="fc" id="L63">        RecommendationRequests.builder()</span>
-<span class="fc" id="L64">            .requesterEmail(requesterEmail)</span>
-<span class="fc" id="L65">            .professorEmail(professorEmail)</span>
-<span class="fc" id="L66">            .explanation(explanation)</span>
-<span class="fc" id="L67">            .dateRequested(dateRequested)</span>
-<span class="fc" id="L68">            .dateNeeded(dateNeeded)</span>
-<span class="fc" id="L69">            .done(done)</span>
-<span class="fc" id="L70">            .build();</span>
+<span class="fc" id="L102">        RecommendationRequests.builder()</span>
+<span class="fc" id="L103">            .requesterEmail(requesterEmail)</span>
+<span class="fc" id="L104">            .professorEmail(professorEmail)</span>
+<span class="fc" id="L105">            .explanation(explanation)</span>
+<span class="fc" id="L106">            .dateRequested(dateRequested)</span>
+<span class="fc" id="L107">            .dateNeeded(dateNeeded)</span>
+<span class="fc" id="L108">            .done(done)</span>
+<span class="fc" id="L109">            .build();</span>
 
-<span class="fc" id="L72">    return repository.save(rr);</span>
+<span class="fc" id="L111">    return repository.save(rr);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
